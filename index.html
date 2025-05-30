@@ -1,103 +1,117 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crack the Code Game</title>
+    <title>Crack the Code Web App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Стили CSS для Web App */
+        /* Стилизация с использованием Tailwind CSS-подобных классов для примера */
         body {
-            font-family: 'Inter', sans-serif; /* Используем Inter для современного вида */
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Изменено на flex-start, чтобы контент не был прижат к центру по вертикали */
+            min-height: 100vh;
+            background-color: var(--tg-theme-bg-color, #f0f2f5); /* Light gray background */
+            color: var(--tg-theme-text-color, #333);
             margin: 0;
             padding: 20px;
-            /* Используем переменные темы Telegram для адаптации к светлой/темной теме */
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Выравнивание по верхнему краю */
-            min-height: 100vh;
             box-sizing: border-box;
         }
-
         .container {
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff); /* White background for content */
+            padding: 30px;
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            text-align: center;
+            max-width: 600px; /* Увеличена максимальная ширина для лучшего отображения */
             width: 100%;
-            max-width: 600px; /* Ограничиваем ширину для больших экранов */
-            padding: 20px;
-            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            border-radius: 12px; /* Скругленные углы */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
         }
-
         h1, h2 {
-            color: var(--tg-theme-text-color, #333);
-            text-align: center;
+            color: var(--tg-theme-text-color, #4a90e2); /* Blue heading */
             margin-bottom: 20px;
+            font-size: 1.8em;
         }
-
-        .section {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid var(--tg-theme-hint-color, #ccc);
-            border-radius: 8px; /* Скругленные углы */
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            transition: all 0.3s ease; /* Плавные переходы */
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        input[type="text"] {
-            width: calc(100% - 22px); /* Учитываем padding и border */
-            padding: 12px;
+        p {
             margin-bottom: 15px;
-            border: 1px solid var(--tg-theme-hint-color, #ccc);
-            border-radius: 6px; /* Скругленные углы */
-            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            font-size: 1em;
-            box-sizing: border-box; /* Включаем padding и border в общую ширину */
+            line-height: 1.6;
         }
-
+        .input-group {
+            display: flex;
+            gap: 10px; /* Промежуток между полями ввода */
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        .input-group input[type="text"] {
+            flex-grow: 1; /* Поля ввода будут расти */
+            width: auto; /* Сброс ширины, чтобы flex-grow работал */
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #ddd);
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        .input-group input[type="text"]:focus {
+            border-color: var(--tg-theme-link-color, #4a90e2);
+            outline: none;
+        }
         button {
             width: 100%;
             padding: 14px;
             background-color: var(--tg-theme-button-color, #007bff);
             color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            border-radius: 6px; /* Скругленные углы */
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1.1em;
             margin-top: 10px;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-
         button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            background-color: var(--tg-theme-button-color, #357ABD); /* Darker blue on hover */
+            transform: translateY(-2px);
         }
-
         button:active {
             transform: translateY(0);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-
-        .error {
-            color: var(--tg-theme-destructive-text-color, red);
-            margin-top: -10px; /* Поднимаем ближе к полю ввода */
-            margin-bottom: 10px;
+        .info-box {
+            background-color: var(--tg-theme-secondary-bg-color, #e6f7ff); /* Light blue info box */
+            border: 1px solid var(--tg-theme-hint-color, #91d5ff); /* Blue border */
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
             font-size: 0.9em;
-            text-align: center;
+            text-align: left;
+            word-wrap: break-word; /* Ensure long IDs wrap */
+            color: var(--tg-theme-text-color, #333);
         }
-
+        .error-message {
+            color: var(--tg-theme-destructive-text-color, #e74c3c); /* Red for error messages */
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 12px; /* Скругленные углы */
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            transition: all 0.3s ease; /* Плавные переходы */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .hidden {
+            display: none;
+        }
         #game-log-section {
             margin-top: 30px;
         }
-
         #game-log {
             max-height: 300px;
             overflow-y: auto;
@@ -106,7 +120,6 @@
             background-color: var(--tg-theme-secondary-bg-color, #f9f9f9);
             border-radius: 6px;
         }
-
         .log-entry {
             margin-bottom: 10px;
             padding-bottom: 10px;
@@ -114,15 +127,12 @@
             font-size: 0.95em;
             line-height: 1.4;
         }
-
         .log-entry:last-child {
             border-bottom: none;
         }
-
         .log-entry strong {
             color: var(--tg-theme-link-color, #007bff);
         }
-
         /* Стили для модальных окон */
         .modal-overlay {
             position: fixed;
@@ -130,7 +140,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6); /* Темнее фон */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -139,50 +149,48 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-
         .modal-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
-
         .modal-content {
-            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+            background-color: var(--tg-theme-bg-color, #ffffff); /* Используем основной фон для модалки */
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 15px; /* Более скругленные углы */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* Более выраженная тень */
             text-align: center;
-            max-width: 350px;
+            max-width: 380px; /* Увеличена максимальная ширина */
             width: 90%;
-            transform: translateY(-20px);
+            transform: translateY(-30px); /* Больше смещение */
             transition: transform 0.3s ease;
+            color: var(--tg-theme-text-color, #333);
         }
-
         .modal-overlay.visible .modal-content {
             transform: translateY(0);
         }
-
         .modal-content p {
-            margin-bottom: 20px;
-            font-size: 1.1em;
+            margin-bottom: 25px; /* Увеличен отступ */
+            font-size: 1.15em; /* Немного крупнее текст */
             color: var(--tg-theme-text-color, #333);
         }
-
-        .modal-buttons button {
-            width: auto;
-            min-width: 100px;
-            margin: 0 10px;
-            padding: 10px 20px;
-            font-size: 1em;
-            box-shadow: none; /* Убираем тень для кнопок в модальном окне */
+        .modal-buttons {
+            display: flex;
+            justify-content: space-around; /* Равномерное распределение кнопок */
+            gap: 15px; /* Промежуток между кнопками */
         }
-
+        .modal-buttons button {
+            flex-grow: 1; /* Кнопки будут занимать доступное пространство */
+            padding: 12px 20px;
+            font-size: 1em;
+            box-shadow: none;
+            margin: 0; /* Сброс внешних отступов */
+        }
         .modal-buttons .cancel-button {
             background-color: var(--tg-theme-hint-color, #6c757d);
         }
         .modal-buttons .cancel-button:hover {
             background-color: var(--tg-theme-hint-color, #5a6268);
         }
-
 
         /* Стили для адаптивности */
         @media (max-width: 768px) {
@@ -193,18 +201,21 @@
                 padding: 15px;
             }
             h1 {
-                font-size: 1.8em;
+                font-size: 1.6em;
             }
             h2 {
-                font-size: 1.3em;
+                font-size: 1.2em;
             }
             button {
                 font-size: 1em;
                 padding: 12px;
             }
+            .modal-buttons {
+                flex-direction: column; /* Кнопки в столбец на мобильных */
+                gap: 10px;
+            }
             .modal-buttons button {
                 width: 100%;
-                margin: 5px 0;
             }
         }
     </style>
@@ -216,14 +227,17 @@
 
         <div id="guess-section" class="section hidden">
             <h2>Ваш ход: Сделайте догадку</h2>
-            <input type="text" id="guess-input" placeholder="Введите 5-значное число" maxlength="5" pattern="\d{5}" inputmode="numeric">
+            <div class="input-group">
+                <input type="text" id="guess-digit-input" placeholder="Цифра (0-9)" maxlength="1" pattern="\d" inputmode="numeric">
+                <input type="text" id="guess-position-input" placeholder="Позиция (1-5)" maxlength="1" pattern="[1-5]" inputmode="numeric">
+            </div>
             <button id="submit-guess">Отгадать</button>
             <div id="guess-error" class="error"></div>
         </div>
 
         <div id="set-code-section" class="section hidden">
             <h2>Ваш ход: Установите свой код</h2>
-            <input type="text" id="set-code-input" placeholder="Введите 5-значный код" maxlength="5" pattern="\d{5}" inputmode="numeric">
+            <input type="text" id="set-code-input" placeholder="Введите 5-значный код (уникальные цифры)" maxlength="5" pattern="\d{5}" inputmode="numeric">
             <button id="submit-set-code">Установить код</button>
             <div id="set-code-error" class="error"></div>
         </div>
@@ -271,7 +285,8 @@
 
             const gameStatusDiv = document.getElementById('game-status');
             const guessSection = document.getElementById('guess-section');
-            const guessInput = document.getElementById('guess-input');
+            const guessDigitInput = document.getElementById('guess-digit-input'); // Новое поле
+            const guessPositionInput = document.getElementById('guess-position-input'); // Новое поле
             const submitGuessButton = document.getElementById('submit-guess');
             const guessErrorDiv = document.getElementById('guess-error');
 
@@ -346,7 +361,21 @@
             }
 
             // Получаем game_id из URL-параметра, если он есть
-            gameId = getQueryParam('game_id');
+            // Важно: chat_instance - это ID, который Telegram передает Web App для идентификации чата.
+            // Если Web App запускается из группы/канала, это будет ID чата.
+            // Если из личного чата с ботом, это будет уникальный ID, связанный с этим чатом.
+            // Для вашей игры лучше использовать chat_instance, так как он более универсален.
+            if (tg.initDataUnsafe && tg.initDataUnsafe.chat_instance) {
+                gameId = tg.initDataUnsafe.chat_instance;
+            } else if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+                // Если нет chat_instance (например, в приватном чате с ботом без использования кнопки WebApp),
+                // можно использовать user.id, но это менее надежно для идентификации *игры*,
+                // если у пользователя может быть несколько игр одновременно.
+                gameId = tg.initDataUnsafe.user.id;
+            } else {
+                gameId = getQueryParam('game_id'); // Fallback, если бот передает через URL
+            }
+
 
             if (gameId) {
                 gameStatusDiv.textContent = `Загрузка статуса игры ID: ${gameId}...`;
@@ -362,36 +391,41 @@
             function updateUI(gameState) {
                 tg.hideProgress(); // Скрываем индикатор загрузки
 
-                gameStatusDiv.innerHTML = `**Игра ID:** ${gameState.game_id}<br>`;
+                gameStatusDiv.innerHTML = `**Игра ID:** ${gameState.game_id || 'Неизвестно'}<br>`;
                 if (gameState.status === 'in_match') {
                     gameStatusDiv.innerHTML += `**Статус:** Идет матч<br>`;
                     gameStatusDiv.innerHTML += `**Ваша очередь:** ${gameState.your_turn ? 'Да' : 'Нет'}<br>`;
                     gameStatusDiv.innerHTML += `**Противник:** ${gameState.opponent_name || 'Неизвестно'}<br>`;
+                    gameStatusDiv.innerHTML += `**Ваш прогресс:** ${gameState.your_progress || '-----'}<br>`;
+                    gameStatusDiv.innerHTML += `**Код противника:** ${gameState.opponent_progress || '-----'}<br>`;
 
-                    if (gameState.your_turn && gameState.is_guesser) {
+
+                    if (gameState.your_turn) {
                         guessSection.classList.remove('hidden');
-                        setCodeSection.classList.add('hidden');
-                    } else if (gameState.your_turn && !gameState.is_guesser) {
-                        setCodeSection.classList.remove('hidden');
-                        guessSection.classList.add('hidden');
+                        setCodeSection.classList.add('hidden'); // Не устанавливаем код во время угадывания
                     } else {
                         guessSection.classList.add('hidden');
                         setCodeSection.classList.add('hidden');
                     }
-                } else if (gameState.status === 'waiting_for_opponent') {
-                    gameStatusDiv.innerHTML += `**Статус:** Ожидание противника<br>`;
+                } else if (gameState.status === 'waiting_for_code') {
+                    gameStatusDiv.innerHTML += `**Статус:** Ожидание установки кода<br>`;
+                    guessSection.classList.add('hidden');
+                    setCodeSection.classList.remove('hidden'); // Показываем секцию установки кода
+                }
+                else if (gameState.status === 'waiting_for_opponent' || gameState.status === 'waiting_for_tournament') {
+                    gameStatusDiv.innerHTML += `**Статус:** Ожидание противника или начала турнира<br>`;
                     guessSection.classList.add('hidden');
                     setCodeSection.classList.add('hidden');
                 } else if (gameState.status === 'game_over') {
-                    gameStatusDiv.innerHTML += `**Статус:** Игра окончена. Победитель: ${gameState.winner || 'Неизвестно'}<br>`;
+                    gameStatusDiv.innerHTML += `**Статус:** Игра окончена. Победитель: ${gameState.winner_name || 'Неизвестно'}<br>`;
                     guessSection.classList.add('hidden');
                     setCodeSection.classList.add('hidden');
-                } else if (gameState.status === 'no_game') {
-                    gameStatusDiv.textContent = "Вы не в игре. Начните новую игру через бота.";
+                } else if (gameState.status === 'no_game' || gameState.status === 'start') {
+                    gameStatusDiv.textContent = "Вы не в активной игре. Начните новую игру через бота или зарегистрируйтесь на турнир.";
                     guessSection.classList.add('hidden');
                     setCodeSection.classList.add('hidden');
                 } else {
-                    gameStatusDiv.textContent = `Статус игры: ${gameState.status}`;
+                    gameStatusDiv.textContent = `Статус игры: ${gameState.status || 'Неизвестно'}`;
                     guessSection.classList.add('hidden');
                     setCodeSection.classList.add('hidden');
                 }
@@ -405,11 +439,14 @@
                         let entryHtml = `<strong>${entry.player_name || 'Игрок'}:</strong> `;
                         if (entry.type === 'guess') {
                             entryHtml += `Догадка: ${entry.value}`;
-                            if (entry.bulls !== undefined && entry.cows !== undefined) {
-                                entryHtml += `<br>Быки: ${entry.bulls}, Коровы: ${entry.cows}`;
+                            // Здесь логика для отображения быков/коров, если бот будет их присылать
+                            if (entry.result_message) { // Если бот присылает готовое сообщение о результате
+                                entryHtml += `<br>${entry.result_message}`;
                             }
                         } else if (entry.type === 'set_code') {
                             entryHtml += `Установил код: ${entry.value}`;
+                        } else if (entry.type === 'message') { // Для общих сообщений от бота
+                            entryHtml += `${entry.text}`;
                         }
                         logEntryDiv.innerHTML = entryHtml;
                         gameLogDiv.appendChild(logEntryDiv);
@@ -423,20 +460,23 @@
             // --- Обработчики событий кнопок ---
 
             submitGuessButton.addEventListener('click', () => {
-                const guess = guessInput.value.trim();
+                const digit = guessDigitInput.value.trim();
+                const position = guessPositionInput.value.trim();
                 guessErrorDiv.textContent = '';
 
-                if (!/^\d{5}$/.test(guess)) {
-                    guessErrorDiv.textContent = 'Пожалуйста, введите 5 цифр.';
+                if (!/^\d$/.test(digit)) {
+                    guessErrorDiv.textContent = 'Цифра должна быть одной цифрой (0-9).';
                     return;
                 }
-                if (new Set(guess).size !== 5) {
-                    guessErrorDiv.textContent = 'Цифры в догадке должны быть уникальными.';
+                if (!/^[1-5]$/.test(position)) {
+                    guessErrorDiv.textContent = 'Позиция должна быть числом от 1 до 5.';
                     return;
                 }
 
-                sendDataToBot('make_guess', { guess: guess });
-                guessInput.value = ''; // Очищаем поле
+                // Отправляем данные в формате, ожидаемом ботом: "цифра позиция"
+                sendDataToBot('make_guess', { guess_string: `${digit} ${position}` });
+                guessDigitInput.value = ''; // Очищаем поле
+                guessPositionInput.value = ''; // Очищаем поле
             });
 
             submitSetCodeButton.addEventListener('click', () => {
@@ -449,6 +489,10 @@
                 }
                 if (new Set(code).size !== 5) {
                     setCodeErrorDiv.textContent = 'Цифры в коде должны быть уникальными.';
+                    return;
+                }
+                if (code.startsWith('0')) {
+                    setCodeErrorDiv.textContent = 'Код не должен начинаться с нуля.';
                     return;
                 }
 
@@ -478,13 +522,6 @@
             });
 
             // Обработчик для получения данных от бота
-            // ВАЖНО: Этот обработчик будет вызван, если бот использует
-            // telegram.WebApp.sendData() в ответ на ваш запрос из Web App.
-            // Однако, в текущей реализации бота (без HTTP-сервера),
-            // бот будет отправлять ответы в чат.
-            // Поэтому, для обновления UI в Web App, пользователь должен нажать "Обновить".
-            // Если вы реализуете бэкэнд API, этот метод будет использоваться для
-            // получения данных.
             tg.onEvent('dataReceived', (event) => {
                 try {
                     const data = JSON.parse(event.data);
