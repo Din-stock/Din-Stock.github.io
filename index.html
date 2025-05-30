@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crack the Code Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Стили CSS для Web App */
+        body {
+            font-family: 'Inter', sans-serif; /* Используем Inter для современного вида */
+            margin: 0;
+            padding: 20px;
+            /* Используем переменные темы Telegram для адаптации к светлой/темной теме */
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Выравнивание по верхнему краю */
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px; /* Ограничиваем ширину для больших экранов */
+            padding: 20px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px; /* Скругленные углы */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        h1, h2 {
+            color: var(--tg-theme-text-color, #333);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 8px; /* Скругленные углы */
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            transition: all 0.3s ease; /* Плавные переходы */
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 22px); /* Учитываем padding и border */
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 6px; /* Скругленные углы */
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            font-size: 1em;
+            box-sizing: border-box; /* Включаем padding и border в общую ширину */
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--tg-theme-button-color, #007bff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 6px; /* Скругленные углы */
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 10px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .error {
+            color: var(--tg-theme-destructive-text-color, red);
+            margin-top: -10px; /* Поднимаем ближе к полю ввода */
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        #game-log-section {
+            margin-top: 30px;
+        }
+
+        #game-log {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--tg-theme-hint-color, #ddd);
+            padding: 10px;
+            background-color: var(--tg-theme-secondary-bg-color, #f9f9f9);
+            border-radius: 6px;
+        }
+
+        .log-entry {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--tg-theme-hint-color, #eee);
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry strong {
+            color: var(--tg-theme-link-color, #007bff);
+        }
+
+        /* Стили для модальных окон */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            color: var(--tg-theme-text-color, #333);
+        }
+
+        .modal-buttons button {
+            width: auto;
+            min-width: 100px;
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            box-shadow: none; /* Убираем тень для кнопок в модальном окне */
+        }
+
+        .modal-buttons .cancel-button {
+            background-color: var(--tg-theme-hint-color, #6c757d);
+        }
+        .modal-buttons .cancel-button:hover {
+            background-color: var(--tg-theme-hint-color, #5a6268);
+        }
+
+
+        /* Стили для адаптивности */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            h2 {
+                font-size: 1.3em;
+            }
+            button {
+                font-size: 1em;
+                padding: 12px;
+            }
+            .modal-buttons button {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Crack the Code</h1>
+        <div id="game-status">Загрузка статуса игры...</div>
+
+        <div id="guess-section" class="section hidden">
+            <h2>Ваш ход: Сделайте догадку</h2>
+            <input type="text" id="guess-input" placeholder="Введите 5-значное число" maxlength="5" pattern="\d{5}" inputmode="numeric">
+            <button id="submit-guess">Отгадать</button>
+            <div id="guess-error" class="error"></div>
+        </div>
+
+        <div id="set-code-section" class="section hidden">
+            <h2>Ваш ход: Установите свой код</h2>
+            <input type="text" id="set-code-input" placeholder="Введите 5-значный код" maxlength="5" pattern="\d{5}" inputmode="numeric">
+            <button id="submit-set-code">Установить код</button>
+            <div id="set-code-error" class="error"></div>
+        </div>
+
+        <div id="game-log-section" class="section">
+            <h2>История ходов</h2>
+            <div id="game-log">
+                <p>История ходов будет показана здесь.</p>
+            </div>
+        </div>
+
+        <button id="refresh-button">Обновить статус игры</button>
+        <button id="exit-game-button">Выйти из игры</button>
+    </div>
+
+    <div id="custom-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <div class="modal-buttons">
+                <button id="modal-ok-button">ОК</button>
+                <button id="modal-cancel-button" class="cancel-button hidden">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript логика для Web App
+        const tg = window.Telegram.WebApp;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Уведомляем Telegram, что Web App готово
+            tg.ready();
+            tg.expand(); // Разворачиваем Web App на весь экран
+
+            // Устанавливаем цвета из темы Telegram
+            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
+            document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color);
+            document.documentElement.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color);
+            document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color);
+            document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color);
+            document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color);
+            document.documentElement.style.setProperty('--tg-theme-destructive-text-color', tg.themeParams.destructive_text_color);
+
+
+            const gameStatusDiv = document.getElementById('game-status');
+            const guessSection = document.getElementById('guess-section');
+            const guessInput = document.getElementById('guess-input');
+            const submitGuessButton = document.getElementById('submit-guess');
+            const guessErrorDiv = document.getElementById('guess-error');
+
+            const setCodeSection = document.getElementById('set-code-section');
+            const setCodeInput = document.getElementById('set-code-input');
+            const submitSetCodeButton = document.getElementById('submit-set-code');
+            const setCodeErrorDiv = document.getElementById('set-code-error');
+
+            const gameLogDiv = document.getElementById('game-log');
+            const refreshButton = document.getElementById('refresh-button');
+            const exitGameButton = document.getElementById('exit-game-button');
+
+            // Элементы модального окна
+            const customModalOverlay = document.getElementById('custom-modal-overlay');
+            const modalMessage = document.getElementById('modal-message');
+            const modalOkButton = document.getElementById('modal-ok-button');
+            const modalCancelButton = document.getElementById('modal-cancel-button');
+
+            let gameId = null; // Будет установлено при первом запросе из бота
+            let confirmCallback = null; // Для обработки confirm
+
+            // Пользовательская функция showAlert
+            function customShowAlert(message) {
+                modalMessage.textContent = message;
+                modalOkButton.classList.remove('hidden');
+                modalCancelButton.classList.add('hidden'); // Скрываем кнопку отмены для alert
+                customModalOverlay.classList.add('visible');
+                modalOkButton.onclick = () => {
+                    customModalOverlay.classList.remove('visible');
+                };
+            }
+
+            // Пользовательская функция showConfirm
+            function customShowConfirm(message, callback) {
+                modalMessage.textContent = message;
+                modalOkButton.classList.remove('hidden');
+                modalCancelButton.classList.remove('hidden'); // Показываем кнопку отмены для confirm
+                customModalOverlay.classList.add('visible');
+                confirmCallback = callback; // Сохраняем callback
+
+                modalOkButton.onclick = () => {
+                    customModalOverlay.classList.remove('visible');
+                    if (confirmCallback) {
+                        confirmCallback(true);
+                    }
+                };
+                modalCancelButton.onclick = () => {
+                    customModalOverlay.classList.remove('visible');
+                    if (confirmCallback) {
+                        confirmCallback(false);
+                    }
+                };
+            }
+
+
+            // Функция для получения параметра из URL
+            function getQueryParam(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
+            }
+
+            // Функция для отправки данных боту через sendData
+            function sendDataToBot(action, payload = {}) {
+                // Добавляем game_id к каждому запросу, если он известен
+                if (gameId) {
+                    payload.game_id = gameId;
+                }
+                const data = { action: action, ...payload };
+                tg.sendData(JSON.stringify(data));
+                // Показываем индикатор загрузки Telegram
+                tg.showProgress();
+            }
+
+            // Получаем game_id из URL-параметра, если он есть
+            gameId = getQueryParam('game_id');
+
+            if (gameId) {
+                gameStatusDiv.textContent = `Загрузка статуса игры ID: ${gameId}...`;
+                // Отправляем запрос боту для получения начального статуса игры
+                sendDataToBot('get_game_status');
+            } else {
+                gameStatusDiv.textContent = "Не удалось определить ID игры. Запустите Web App из активной игры.";
+                customShowAlert("Не удалось определить ID игры. Пожалуйста, запустите Web App из активной игры или используйте соответствующую кнопку в боте.");
+                // tg.close(); // Можно закрыть, если без ID игры бессмысленно
+            }
+
+            // Функция для обновления пользовательского интерфейса на основе данных о состоянии игры
+            function updateUI(gameState) {
+                tg.hideProgress(); // Скрываем индикатор загрузки
+
+                gameStatusDiv.innerHTML = `**Игра ID:** ${gameState.game_id}<br>`;
+                if (gameState.status === 'in_match') {
+                    gameStatusDiv.innerHTML += `**Статус:** Идет матч<br>`;
+                    gameStatusDiv.innerHTML += `**Ваша очередь:** ${gameState.your_turn ? 'Да' : 'Нет'}<br>`;
+                    gameStatusDiv.innerHTML += `**Противник:** ${gameState.opponent_name || 'Неизвестно'}<br>`;
+
+                    if (gameState.your_turn && gameState.is_guesser) {
+                        guessSection.classList.remove('hidden');
+                        setCodeSection.classList.add('hidden');
+                    } else if (gameState.your_turn && !gameState.is_guesser) {
+                        setCodeSection.classList.remove('hidden');
+                        guessSection.classList.add('hidden');
+                    } else {
+                        guessSection.classList.add('hidden');
+                        setCodeSection.classList.add('hidden');
+                    }
+                } else if (gameState.status === 'waiting_for_opponent') {
+                    gameStatusDiv.innerHTML += `**Статус:** Ожидание противника<br>`;
+                    guessSection.classList.add('hidden');
+                    setCodeSection.classList.add('hidden');
+                } else if (gameState.status === 'game_over') {
+                    gameStatusDiv.innerHTML += `**Статус:** Игра окончена. Победитель: ${gameState.winner || 'Неизвестно'}<br>`;
+                    guessSection.classList.add('hidden');
+                    setCodeSection.classList.add('hidden');
+                } else if (gameState.status === 'no_game') {
+                    gameStatusDiv.textContent = "Вы не в игре. Начните новую игру через бота.";
+                    guessSection.classList.add('hidden');
+                    setCodeSection.classList.add('hidden');
+                } else {
+                    gameStatusDiv.textContent = `Статус игры: ${gameState.status}`;
+                    guessSection.classList.add('hidden');
+                    setCodeSection.classList.add('hidden');
+                }
+
+                // Обновление истории ходов
+                gameLogDiv.innerHTML = '';
+                if (gameState.log && gameState.log.length > 0) {
+                    gameState.log.forEach(entry => {
+                        const logEntryDiv = document.createElement('div');
+                        logEntryDiv.className = 'log-entry';
+                        let entryHtml = `<strong>${entry.player_name || 'Игрок'}:</strong> `;
+                        if (entry.type === 'guess') {
+                            entryHtml += `Догадка: ${entry.value}`;
+                            if (entry.bulls !== undefined && entry.cows !== undefined) {
+                                entryHtml += `<br>Быки: ${entry.bulls}, Коровы: ${entry.cows}`;
+                            }
+                        } else if (entry.type === 'set_code') {
+                            entryHtml += `Установил код: ${entry.value}`;
+                        }
+                        logEntryDiv.innerHTML = entryHtml;
+                        gameLogDiv.appendChild(logEntryDiv);
+                    });
+                    gameLogDiv.scrollTop = gameLogDiv.scrollHeight; // Прокрутка вниз
+                } else {
+                    gameLogDiv.innerHTML = '<p>История ходов пока пуста.</p>';
+                }
+            }
+
+            // --- Обработчики событий кнопок ---
+
+            submitGuessButton.addEventListener('click', () => {
+                const guess = guessInput.value.trim();
+                guessErrorDiv.textContent = '';
+
+                if (!/^\d{5}$/.test(guess)) {
+                    guessErrorDiv.textContent = 'Пожалуйста, введите 5 цифр.';
+                    return;
+                }
+                if (new Set(guess).size !== 5) {
+                    guessErrorDiv.textContent = 'Цифры в догадке должны быть уникальными.';
+                    return;
+                }
+
+                sendDataToBot('make_guess', { guess: guess });
+                guessInput.value = ''; // Очищаем поле
+            });
+
+            submitSetCodeButton.addEventListener('click', () => {
+                const code = setCodeInput.value.trim();
+                setCodeErrorDiv.textContent = '';
+
+                if (!/^\d{5}$/.test(code)) {
+                    setCodeErrorDiv.textContent = 'Пожалуйста, введите 5 цифр для кода.';
+                    return;
+                }
+                if (new Set(code).size !== 5) {
+                    setCodeErrorDiv.textContent = 'Цифры в коде должны быть уникальными.';
+                    return;
+                }
+
+                sendDataToBot('set_code', { code: code });
+                setCodeInput.value = ''; // Очищаем поле
+            });
+
+            refreshButton.addEventListener('click', () => {
+                if (gameId) {
+                    sendDataToBot('get_game_status');
+                    gameStatusDiv.textContent = `Обновление статуса игры ID: ${gameId}...`;
+                } else {
+                    customShowAlert("Не удалось обновить: ID игры не определен.");
+                }
+            });
+
+            exitGameButton.addEventListener('click', () => {
+                if (gameId) {
+                     customShowConfirm('Вы уверены, что хотите выйти из текущей игры?', (confirmed) => {
+                        if (confirmed) {
+                            sendDataToBot('exit_game');
+                        }
+                    });
+                } else {
+                    customShowAlert("Не в игре, нечего выходить.");
+                }
+            });
+
+            // Обработчик для получения данных от бота
+            // ВАЖНО: Этот обработчик будет вызван, если бот использует
+            // telegram.WebApp.sendData() в ответ на ваш запрос из Web App.
+            // Однако, в текущей реализации бота (без HTTP-сервера),
+            // бот будет отправлять ответы в чат.
+            // Поэтому, для обновления UI в Web App, пользователь должен нажать "Обновить".
+            // Если вы реализуете бэкэнд API, этот метод будет использоваться для
+            // получения данных.
+            tg.onEvent('dataReceived', (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.action === 'game_state_update') {
+                        updateUI(data.game_state);
+                    } else if (data.action === 'message') {
+                        customShowAlert(data.text); // Используем customShowAlert
+                    }
+                } catch (e) {
+                    console.error("Failed to parse data received from bot:", e);
+                    customShowAlert("Ошибка при обработке данных от бота."); // Используем customShowAlert
+                }
+                tg.hideProgress();
+            });
+        });
+    </script>
+</body>
+</html>
