@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -225,21 +225,21 @@
         <h1>Crack the Code</h1>
         <div id="game-status">Загрузка статуса игры...</div>
 
+        <div id="set-code-section" class="section hidden">
+            <h2>Установите свой секретный код</h2>
+            <input type="text" id="set-code-input" placeholder="Введите 5-значный код (уникальные цифры)" maxlength="5" pattern="\d{5}" inputmode="numeric">
+            <button id="submit-set-code">Установить код</button>
+            <div id="set-code-error" class="error-message"></div>
+        </div>
+
         <div id="guess-section" class="section hidden">
-            <h2>Ваш ход: Сделайте догадку</h2>
+            <h2>Сделайте догадку</h2>
             <div class="input-group">
                 <input type="text" id="guess-digit-input" placeholder="Цифра (0-9)" maxlength="1" pattern="\d" inputmode="numeric">
                 <input type="text" id="guess-position-input" placeholder="Позиция (1-5)" maxlength="1" pattern="[1-5]" inputmode="numeric">
             </div>
             <button id="submit-guess">Отгадать</button>
-            <div id="guess-error" class="error"></div>
-        </div>
-
-        <div id="set-code-section" class="section hidden">
-            <h2>Ваш ход: Установите свой код</h2>
-            <input type="text" id="set-code-input" placeholder="Введите 5-значный код (уникальные цифры)" maxlength="5" pattern="\d{5}" inputmode="numeric">
-            <button id="submit-set-code">Установить код</button>
-            <div id="set-code-error" class="error"></div>
+            <div id="guess-error" class="error-message"></div>
         </div>
 
         <div id="game-log-section" class="section">
@@ -251,6 +251,8 @@
 
         <button id="refresh-button">Обновить статус игры</button>
         <button id="exit-game-button">Выйти из игры</button>
+        <button id="start-new-game-button" class="hidden">Начать новую игру</button>
+        <button id="ready-for-tournament-button" class="hidden">Готов к турниру</button>
     </div>
 
     <div id="custom-modal-overlay" class="modal-overlay">
@@ -285,8 +287,8 @@
 
             const gameStatusDiv = document.getElementById('game-status');
             const guessSection = document.getElementById('guess-section');
-            const guessDigitInput = document.getElementById('guess-digit-input'); // Новое поле
-            const guessPositionInput = document.getElementById('guess-position-input'); // Новое поле
+            const guessDigitInput = document.getElementById('guess-digit-input');
+            const guessPositionInput = document.getElementById('guess-position-input');
             const submitGuessButton = document.getElementById('submit-guess');
             const guessErrorDiv = document.getElementById('guess-error');
 
@@ -298,6 +300,8 @@
             const gameLogDiv = document.getElementById('game-log');
             const refreshButton = document.getElementById('refresh-button');
             const exitGameButton = document.getElementById('exit-game-button');
+            const startNewGameButton = document.getElementById('start-new-game-button'); // Новая кнопка
+            const readyForTournamentButton = document.getElementById('ready-for-tournament-button'); // Новая кнопка
 
             // Элементы модального окна
             const customModalOverlay = document.getElementById('custom-modal-overlay');
@@ -361,16 +365,9 @@
             }
 
             // Получаем game_id из URL-параметра, если он есть
-            // Важно: chat_instance - это ID, который Telegram передает Web App для идентификации чата.
-            // Если Web App запускается из группы/канала, это будет ID чата.
-            // Если из личного чата с ботом, это будет уникальный ID, связанный с этим чатом.
-            // Для вашей игры лучше использовать chat_instance, так как он более универсален.
             if (tg.initDataUnsafe && tg.initDataUnsafe.chat_instance) {
                 gameId = tg.initDataUnsafe.chat_instance;
             } else if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
-                // Если нет chat_instance (например, в приватном чате с ботом без использования кнопки WebApp),
-                // можно использовать user.id, но это менее надежно для идентификации *игры*,
-                // если у пользователя может быть несколько игр одновременно.
                 gameId = tg.initDataUnsafe.user.id;
             } else {
                 gameId = getQueryParam('game_id'); // Fallback, если бот передает через URL
@@ -384,12 +381,18 @@
             } else {
                 gameStatusDiv.textContent = "Не удалось определить ID игры. Запустите Web App из активной игры.";
                 customShowAlert("Не удалось определить ID игры. Пожалуйста, запустите Web App из активной игры или используйте соответствующую кнопку в боте.");
-                // tg.close(); // Можно закрыть, если без ID игры бессмысленно
             }
 
             // Функция для обновления пользовательского интерфейса на основе данных о состоянии игры
             function updateUI(gameState) {
                 tg.hideProgress(); // Скрываем индикатор загрузки
+
+                // Скрываем все кнопки по умолчанию
+                startNewGameButton.classList.add('hidden');
+                readyForTournamentButton.classList.add('hidden');
+                exitGameButton.classList.add('hidden');
+                guessSection.classList.add('hidden');
+                setCodeSection.classList.add('hidden');
 
                 gameStatusDiv.innerHTML = `**Игра ID:** ${gameState.game_id || 'Неизвестно'}<br>`;
                 if (gameState.status === 'in_match') {
@@ -402,32 +405,27 @@
 
                     if (gameState.your_turn) {
                         guessSection.classList.remove('hidden');
-                        setCodeSection.classList.add('hidden'); // Не устанавливаем код во время угадывания
-                    } else {
-                        guessSection.classList.add('hidden');
-                        setCodeSection.classList.add('hidden');
                     }
+                    exitGameButton.classList.remove('hidden'); // Можно выйти из матча
                 } else if (gameState.status === 'waiting_for_code') {
                     gameStatusDiv.innerHTML += `**Статус:** Ожидание установки кода<br>`;
-                    guessSection.classList.add('hidden');
                     setCodeSection.classList.remove('hidden'); // Показываем секцию установки кода
+                    exitGameButton.classList.remove('hidden'); // Можно выйти, если ждем код
                 }
                 else if (gameState.status === 'waiting_for_opponent' || gameState.status === 'waiting_for_tournament') {
                     gameStatusDiv.innerHTML += `**Статус:** Ожидание противника или начала турнира<br>`;
-                    guessSection.classList.add('hidden');
-                    setCodeSection.classList.add('hidden');
+                    exitGameButton.classList.remove('hidden'); // Можно выйти, если ждем
                 } else if (gameState.status === 'game_over') {
                     gameStatusDiv.innerHTML += `**Статус:** Игра окончена. Победитель: ${gameState.winner_name || 'Неизвестно'}<br>`;
-                    guessSection.classList.add('hidden');
-                    setCodeSection.classList.add('hidden');
+                    startNewGameButton.classList.remove('hidden'); // Предлагаем начать новую игру
                 } else if (gameState.status === 'no_game' || gameState.status === 'start') {
                     gameStatusDiv.textContent = "Вы не в активной игре. Начните новую игру через бота или зарегистрируйтесь на турнир.";
-                    guessSection.classList.add('hidden');
-                    setCodeSection.classList.add('hidden');
+                    startNewGameButton.classList.remove('hidden'); // Предлагаем начать новую игру
+                    readyForTournamentButton.classList.remove('hidden'); // Предлагаем зарегистрироваться
                 } else {
                     gameStatusDiv.textContent = `Статус игры: ${gameState.status || 'Неизвестно'}`;
-                    guessSection.classList.add('hidden');
-                    setCodeSection.classList.add('hidden');
+                    startNewGameButton.classList.remove('hidden');
+                    readyForTournamentButton.classList.remove('hidden');
                 }
 
                 // Обновление истории ходов
@@ -436,17 +434,18 @@
                     gameState.log.forEach(entry => {
                         const logEntryDiv = document.createElement('div');
                         logEntryDiv.className = 'log-entry';
-                        let entryHtml = `<strong>${entry.player_name || 'Игрок'}:</strong> `;
+                        let entryHtml = `<strong>${entry.player_name || 'Бот'}:</strong> `;
                         if (entry.type === 'guess') {
                             entryHtml += `Догадка: ${entry.value}`;
-                            // Здесь логика для отображения быков/коров, если бот будет их присылать
-                            if (entry.result_message) { // Если бот присылает готовое сообщение о результате
+                            if (entry.result_message) {
                                 entryHtml += `<br>${entry.result_message}`;
                             }
                         } else if (entry.type === 'set_code') {
                             entryHtml += `Установил код: ${entry.value}`;
-                        } else if (entry.type === 'message') { // Для общих сообщений от бота
+                        } else if (entry.type === 'message') {
                             entryHtml += `${entry.text}`;
+                        } else if (entry.type === 'status') { // Для сообщений о статусе
+                            entryHtml = `<em>${entry.text}</em>`;
                         }
                         logEntryDiv.innerHTML = entryHtml;
                         gameLogDiv.appendChild(logEntryDiv);
@@ -473,7 +472,6 @@
                     return;
                 }
 
-                // Отправляем данные в формате, ожидаемом ботом: "цифра позиция"
                 sendDataToBot('make_guess', { guess_string: `${digit} ${position}` });
                 guessDigitInput.value = ''; // Очищаем поле
                 guessPositionInput.value = ''; // Очищаем поле
@@ -519,6 +517,16 @@
                 } else {
                     customShowAlert("Не в игре, нечего выходить.");
                 }
+            });
+
+            startNewGameButton.addEventListener('click', () => {
+                sendDataToBot('start_game');
+                customShowAlert("Запрос на начало новой игры отправлен. Проверьте чат бота для дальнейших инструкций.");
+            });
+
+            readyForTournamentButton.addEventListener('click', () => {
+                sendDataToBot('ready');
+                customShowAlert("Запрос на регистрацию в турнире отправлен. Проверьте чат бота для подтверждения.");
             });
 
             // Обработчик для получения данных от бота
