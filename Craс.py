@@ -37,12 +37,12 @@ SHOW_ALL_MATCH_IDS_CALLBACK = "show_all_match_ids_callback"
 
 CODE_LENGTH = 5 # Определение длины кода
 
-WAIT_READY_TIMEOUT_SECONDS = 10 * 60  # 10 минут
+WAIT_READY_TIMEOUT_SECONDS = 600  # 10 минут
 IN_MATCH_TIMEOUT_SECONDS = 900   # 15 минут (900 секунд)
 
 # URL вашего Web App. ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ HTTPS URL!
 # Это должен быть путь к вашему index.html на GitHub Pages
-WEB_APP_URL = "[https://din-stock.github.io/](https://din-stock.github.io/)" # <-- Вставьте ваш адрес здесь!
+WEB_APP_URL = "[https://din-stock.github.io/]" # <-- Вставьте ваш адрес здесь!
 
 BOT_TOKEN = "" # Будет загружен из config.txt
 ADMIN_USER_ID = 0 # Будет загружен из config.txt
